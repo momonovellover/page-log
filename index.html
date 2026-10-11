@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5967d8">
+<meta name="description" content="毎日の勉強ページ数を記録して、月ごとの比較やペースを確認できる個人用アプリ。">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>ページログ</title>
+<style>
+:root{--bg:#f5f6fb;--card:#fff;--ink:#24283b;--muted:#747991;--line:#e7e9f2;--accent:#5967d8;--accent2:#e9ebff;--good:#16856b;--bad:#bd5262;--radius:18px}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif}
+header{background:linear-gradient(135deg,#5967d8,#8580e8);color:#fff;padding:24px 18px 26px;border-radius:0 0 26px 26px}
+.head{max-width:850px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:1.5rem;font-weight:800;letter-spacing:.02em}.subtitle{opacity:.9;font-size:.88rem;margin-top:4px}
+main{max-width:850px;margin:18px auto;padding:0 14px 40px}.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:17px;margin-bottom:14px;box-shadow:0 4px 16px #24283b06}
+h2{font-size:1.05rem;margin:0 0 13px}h3{font-size:.95rem;margin:0 0 8px}.muted{color:var(--muted);font-size:.85rem}.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.wrap{flex-wrap:wrap}
+input,button,select{font:inherit}input[type=number],input[type=date],input[type=month],select{border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff;color:var(--ink);min-width:0}
+input[type=number]{width:100%;font-size:1.25rem;font-weight:700}button{border:0;border-radius:12px;padding:11px 14px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:#fff}.soft{background:var(--accent2);color:#424fb6}.quiet{background:#f0f1f6;color:#4b5065}.danger{color:var(--bad);background:#fff0f1}.full{width:100%}.entrygrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.entrygrid label{font-size:.83rem;color:var(--muted);display:block;margin-bottom:6px}.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{background:#f8f8ff;border-radius:14px;padding:12px}.stat .label{font-size:.78rem;color:var(--muted)}.stat .value{font-size:1.35rem;font-weight:800;margin-top:4px;overflow-wrap:anywhere}.stat .note{font-size:.76rem;color:var(--muted);margin-top:3px}
+.monthbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.monthbar input{flex:1;min-width:145px}.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.dow{text-align:center;font-size:.72rem;color:var(--muted);padding:4px 0}.day{min-height:54px;border-radius:10px;background:#f5f6fb;padding:5px 3px;text-align:center;font-size:.78rem;border:1px solid transparent}.day .num{font-weight:700}.day .pages{font-size:.68rem;color:#4f5ac0;margin-top:4px;overflow:hidden}.day.today{border-color:var(--accent)}.day.empty{background:transparent}.day.has{background:#e9ebff}.day button{background:transparent;padding:0;width:100%;height:100%;color:inherit}
+.chart{height:160px;display:flex;align-items:end;gap:4px;padding:12px 2px 0;border-bottom:1px solid var(--line);overflow:hidden}.barwrap{flex:1;min-width:4px;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:4px}.bar{width:min(100%,22px);min-height:2px;border-radius:5px 5px 0 0;background:linear-gradient(#8580e8,#5967d8)}.barlabel{font-size:.62rem;color:var(--muted);height:13px;white-space:nowrap}.legend{display:flex;justify-content:space-between;margin-top:7px}
+.history{display:flex;flex-direction:column;gap:8px}.historyitem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.historyitem:last-child{border-bottom:0}.historyitem strong{display:block}.historyitem .actions{display:flex;gap:6px}.historyitem button{padding:7px 9px;font-size:.8rem}
+canvas{max-width:100%}.footer{font-size:.78rem;color:var(--muted);line-height:1.6;text-align:center;padding:6px 12px 18px}
+@media(min-width:620px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}.layout2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.layout2 .card{margin-bottom:0}.day{min-height:65px}.entrygrid{grid-template-columns:1fr 1fr 1fr}}
+</style>
+</head>
+<body>
+<header><div class="head"><div><div class="brand">📚 ページログ</div><div class="subtitle">今日の積み重ねを、見える記録に。</div></div><button id="installBtn" class="soft" hidden>アプリを追加</button></div></header>
+<main>
+<section class="card">
+<h2>今日の勉強を記録</h2>
+<div class="entrygrid">
+<div><label for="date">日付</label><input id="date" type="date"></div>
+<div><label for="pages">勉強したページ数</label><input id="pages" type="number" min="0" step="1" placeholder="例：24"></div>
+</div>
+<div class="row wrap" style="margin-top:12px"><button class="primary" id="saveBtn">記録を保存</button><button class="quiet" id="clearInputBtn">入力をクリア</button><span class="muted" id="saveMessage" aria-live="polite"></span></div>
+</section>
+<section class="card">
+<div class="row between wrap"><h2 style="margin:0">月ごとの統計</h2><div class="monthbar"><button id="prevMonth" class="quiet" aria-label="前の月">‹</button><input id="month" type="month"><button id="nextMonth" class="quiet" aria-label="次の月">›</button></div></div>
+<div class="stats" style="margin-top:14px">
+<div class="stat"><div class="label">今月の合計</div><div class="value" id="monthTotal">0</div><div class="note">ページ</div></div>
+<div class="stat"><div class="label">先月との差</div><div class="value" id="monthDiff">—</div><div class="note" id="prevTotal">先月：0ページ</div></div>
+<div class="stat"><div class="label">1日平均</div><div class="value" id="dailyAvg">0</div><div class="note">月初から今日まで</div></div>
+<div class="stat"><div class="label">月末の予測</div><div class="value" id="forecast">—</div><div class="note">今のペースが続いた場合</div></div>
+</div>
+<div class="row wrap" style="margin-top:12px"><span class="muted" id="activeDays">勉強した日：0日</span><span class="muted" id="weeklyAvg">1週間平均：0ページ</span></div>
+</section>
+<div class="layout2">
+<section class="card"><h2>カレンダー</h2><div class="calendar" id="calendar"></div><p class="muted">日付をタップすると、その日の記録を編集できるよ。</p></section>
+<section class="card"><h2>日ごとのページ数</h2><div class="chart" id="dailyChart"></div><div class="legend muted"><span>1日</span><span>月末</span></div></section>
+</div>
+<section class="card" style="margin-top:14px">
+<h2>年間の記録</h2><div class="row wrap" style="margin-bottom:12px"><label for="year">対象年</label><select id="year"></select></div>
+<div class="stats">
+<div class="stat"><div class="label">年間合計</div><div class="value" id="yearTotal">0</div><div class="note">ページ</div></div>
+<div class="stat"><div class="label">1日平均</div><div class="value" id="yearDaily">0</div><div class="note">対象年の経過日数で計算</div></div>
+<div class="stat"><div class="label">1週間平均</div><div class="value" id="yearWeekly">0</div><div class="note">ページ</div></div>
+<div class="stat"><div class="label">1か月平均</div><div class="value" id="yearMonthly">0</div><div class="note">ページ</div></div>
+</div>
+<h3 style="margin-top:18px">月ごとの合計</h3><div class="chart" id="monthlyChart"></div><div class="legend muted"><span>1月</span><span>12月</span></div>
+</section>
+<section class="card"><h2>記録の履歴</h2><div id="history" class="history"></div></section>
+<section class="card"><h2>データのバックアップ</h2><p class="muted">記録はこのブラウザ内に保存されるよ。端末変更やブラウザデータ削除に備えて、CSVを定期的に保存してね。</p><div class="row wrap"><button id="exportBtn" class="soft">CSVを書き出す</button><label class="quiet" style="display:inline-block;padding:11px 14px;border-radius:12px;font-weight:700;cursor:pointer">CSVを読み込む<input type="file" id="importFile" accept=".csv,text/csv" hidden></label><button id="deleteAllBtn" class="danger">全記録を削除</button></div><p class="muted" id="backupMessage" aria-live="polite"></p></section>
+<p class="footer">ページログは個人用の学習記録アプリです。月末予測は単純なペース計算で、結果を保証するものではありません。</p>
+</main>
+<script>
+const KEY='page-log-records-v1';
+const $=id=>document.getElementById(id);
+let records=load();
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch{return {}}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(records))}
+function localDate(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function monthKey(date){return date.slice(0,7)}
+function sumMonth(m){return Object.entries(records).reduce((s,[d,v])=>s+(d.startsWith(m+'-')?Number(v)||0:0),0)}
+function sumYear(y){return Object.entries(records).reduce((s,[d,v])=>s+(d.startsWith(y+'-')?Number(v)||0:0),0)}
+function daysInMonth(y,m){return new Date(y,m,0).getDate()}
+function fmt(n){return Math.round(n).toLocaleString('ja-JP')}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+ const selected=$('month').value||localDate().slice(0,7),[y,mo]=selected.split('-').map(Number),today=localDate();
+ const total=sumMonth(selected),prevDate=new Date(y,mo-2,1),prev=`${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`,pt=sumMonth(prev);
+ const elapsed=selected===today.slice(0,7)?new Date().getDate():selected<today.slice(0,7)?daysInMonth(y,mo):0;
+ const avg=elapsed?total/elapsed:0,forecast=elapsed?avg*daysInMonth(y,mo):0;
+ $('monthTotal').textContent=fmt(total);$('prevTotal').textContent=`先月：${fmt(pt)}ページ`;
+ $('monthDiff').textContent=(total-pt>0?'+':'')+fmt(total-pt);$('monthDiff').style.color=total>=pt?'var(--good)':'var(--bad)';
+ $('dailyAvg').textContent=avg.toFixed(1);$('forecast').textContent=elapsed?fmt(forecast):'—';
+ $('activeDays').textContent=`勉強した日：${Object.keys(records).filter(d=>d.startsWith(selected+'-')&&Number(records[d])>0).length}日`;
+ $('weeklyAvg').textContent=`1週間平均：約${fmt(avg*7)}ページ`;
+ renderCalendar(y,mo,selected);renderDailyChart(y,mo);renderYear();renderHistory(selected);
+}
+function renderCalendar(y,m,selected){
+ const cal=$('calendar');cal.innerHTML='';['日','月','火','水','木','金','土'].forEach(d=>{const el=document.createElement('div');el.className='dow';el.textContent=d;cal.append(el)});
+ const first=new Date(y,m-1,1).getDay(),count=daysInMonth(y,m);
+ for(let i=0;i<first;i++){let e=document.createElement('div');e.className='day empty';cal.append(e)}
+ for(let day=1;day<=count;day++){const date=`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`,v=records[date];let e=document.createElement('button');e.className='day'+(v!==undefined?' has':'')+(date===localDate()?' today':'');e.innerHTML=`<div class="num">${day}</div><div class="pages">${v!==undefined?fmt(v)+'p':''}</div>`;e.title=`${date}: ${v===undefined?'未記録':v+'ページ'}`;e.onclick=()=>{$('date').value=date;$('pages').value=v??'';$('pages').focus();window.scrollTo({top:0,behavior:'smooth'})};cal.append(e)}
+}
+function makeChart(container,values,labels){
+ const el=$(container);el.innerHTML='';const max=Math.max(1,...values);
+ values.forEach((v,i)=>{const w=document.createElement('div');w.className='barwrap';w.title=`${labels[i]}：${fmt(v)}ページ`;const b=document.createElement('div');b.className='bar';b.style.height=(v/max*100)+'%';const l=document.createElement('div');l.className='barlabel';l.textContent=values.length<=12?labels[i]:((i===0||i===values.length-1||(i+1)%5===0)?labels[i]:'');w.append(b,l);el.append(w)})
+}
+function renderDailyChart(y,m){const n=daysInMonth(y,m),vals=[],labs=[];for(let d=1;d<=n;d++){let k=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;vals.push(Number(records[k])||0);labs.push(String(d))}makeChart('dailyChart',vals,labs)}
+function renderYear(){
+ const y=Number($('year').value)||new Date().getFullYear(),total=sumYear(y),isCurrent=y===new Date().getFullYear(),elapsed=isCurrent?Math.floor((new Date()-new Date(y,0,1))/86400000)+1:(new Date(y,11,31)-new Date(y,0,1))/86400000+1,avg=total/Math.max(1,elapsed);
+ $('yearTotal').textContent=fmt(total);$('yearDaily').textContent=avg.toFixed(1);$('yearWeekly').textContent=fmt(avg*7);$('yearMonthly').textContent=fmt(avg*30.44);
+ const vals=[],labs=[];for(let m=1;m<=12;m++){vals.push(sumMonth(`${y}-${String(m).padStart(2,'0')}`));labs.push(String(m))}makeChart('monthlyChart',vals,labs)
+}
+function renderHistory(selected){
+ const el=$('history'),items=Object.entries(records).filter(([d])=>d.startsWith(selected+'-')).sort((a,b)=>b[0].localeCompare(a[0]));el.innerHTML='';
+ if(!items.length){el.innerHTML='<p class="muted">この月の記録はまだないよ。</p>';return}
+ items.forEach(([d,v])=>{const row=document.createElement('div');row.className='historyitem';row.innerHTML=`<div><strong>${d}</strong><span class="muted">${fmt(v)}ページ</span></div><div class="actions"><button class="soft" data-edit="${d}">編集</button><button class="danger" data-del="${d}">削除</button></div>`;el.append(row)});
+ el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{$('date').value=b.dataset.edit;$('pages').value=records[b.dataset.edit];window.scrollTo({top:0,behavior:'smooth'})});
+ el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const d=b.dataset.del;if(confirm(`${d}の記録を削除する？`)){delete records[d];persist();render()}})
+}
+$('saveBtn').onclick=()=>{const d=$('date').value,v=$('pages').value;if(!d){$('saveMessage').textContent='日付を選んでね';return}if(v===''||!Number.isInteger(Number(v))||Number(v)<0){$('saveMessage').textContent='0以上の整数を入力してね';return}records[d]=Number(v);persist();$('month').value=d.slice(0,7);$('year').value=d.slice(0,4);render();$('saveMessage').textContent='保存したよ！';setTimeout(()=>$('saveMessage').textContent='',2200)};
+$('clearInputBtn').onclick=()=>{$('date').value=localDate();$('pages').value='';$('saveMessage').textContent=''};
+$('month').onchange=render;$('year').onchange=render;
+$('prevMonth').onclick=()=>{const [y,m]=$('month').value.split('-').map(Number),d=new Date(y,m-2,1);$('month').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;render()};
+$('nextMonth').onclick=()=>{const [y,m]=$('month').value.split('-').map(Number),d=new Date(y,m,1);$('month').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;render()};
+$('exportBtn').onclick=()=>{const lines=[['date','pages'],...Object.entries(records).sort((a,b)=>a[0].localeCompare(b[0]))],csv='\uFEFF'+lines.map(r=>r.join(',')).join('\r\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='page-log-backup.csv';a.click();URL.revokeObjectURL(url);$('backupMessage').textContent='CSVを書き出したよ。大切に保管してね。'};
+$('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const text=await f.text(),lines=text.replace(/^\uFEFF/,'').trim().split(/\r?\n/).slice(1);let count=0;for(const line of lines){const [d,v]=line.split(',');if(/^\d{4}-\d{2}-\d{2}$/.test(d)&&Number.isInteger(Number(v))&&Number(v)>=0){records[d]=Number(v);count++}}persist();render();$('backupMessage').textContent=`${count}件の記録を読み込んだよ。既存の日付はCSVの値で上書きされたよ。`}catch{$('backupMessage').textContent='読み込みに失敗したよ。CSVファイルを確認してね.'}e.target.value=''};
+$('deleteAllBtn').onclick=()=>{if(confirm('すべての記録を削除するよ。この操作は取り消せないけど、本当にいい？')){records={};persist();render();$('backupMessage').textContent='全記録を削除したよ。'}};
+let installPrompt;$('installBtn').hidden=true;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;$('installBtn').hidden=false});$('installBtn').onclick=async()=>{if(installPrompt){installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;$('installBtn').hidden=true}else alert('Chromeのメニューから「ホーム画面に追加」を選んでね。')};
+if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+const now=new Date();$('date').value=localDate();$('month').value=localDate().slice(0,7);for(let y=now.getFullYear()-3;y<=now.getFullYear()+1;y++){let o=document.createElement('option');o.value=y;o.textContent=y+'年';$('year').append(o)}$('year').value=now.getFullYear();render();
+</script>
+</body>
+</html>

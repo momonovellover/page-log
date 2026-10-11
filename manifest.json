@@ -1,0 +1,14 @@
+{
+  "name": "ページログ - 勉強ページ記録",
+  "short_name": "ページログ",
+  "description": "毎日の勉強ページ数を記録して振り返る個人用アプリ",
+  "lang": "ja",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f6fb",
+  "theme_color": "#5967d8",
+  "icons": [
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ]
+}
